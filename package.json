@@ -1,6 +1,6 @@
 {
   "name": "node-pre-compile-install",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Installer for modules pre-compiled with node-pre-compile-to-s3",
   "main": "install.js",
   "scripts": {

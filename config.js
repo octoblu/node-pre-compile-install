@@ -1,17 +1,26 @@
 var os = require('os');
 
-module.exports = function(packageJSON) {
+module.exports = function(packageJSON, defaults) {
 
   var PKG = 'node-pre-compile';
+  var modified = {};
+  packageJSON = packageJSON || {};
 
-  getValue = function(name, defaultValue) {
+  var getValue = function(name, defaultValue) {
     var prop = PKG + '-' + name;
-    return packageJSON[prop] || process.env[prop.toUpperCase().replace(/-/g,'_')] || defaultValue;
+    var result =
+      (defaults && typeof(defaults[name])==='string' && defaults[name]) ||
+      process.env[prop.toUpperCase().replace(/-/g,'_')] ||
+      (packageJSON && (packageJSON[prop] || packageJSON[name]));
+    if (result !== undefined && result !== defaultValue) {
+      modified[name] = true;
+    }
+    return result || defaultValue;
   }
 
-  getFile = function(name, version) {
+  var getFile = function(name, version) {
     return getValue(name,
-      [ packageJSON.name,
+      [ pkgName,
         version,
         os.platform(),
         os.arch(),
@@ -19,24 +28,26 @@ module.exports = function(packageJSON) {
       ].join('-') + '.tar.gz');
   }
 
-  getPath = function(name, version) {
-    return getValue(name, (folder ? folder+'/' : '') + packageJSON.name + '/' + version);
+  var getPath = function(name, version) {
+    return getValue(name, (folder ? folder+'/' : '') + pkgName + '/' + version);
   }
 
-  folder = getValue('folder');
-  bucket = getValue('bucket', PKG);
-  region = getValue('region', 'us-west-2');
-  file = getFile('file', packageJSON.version);
-  path = getPath('path', packageJSON.version);
-  base = getValue('base', 'http://' + bucket + '.s3-website-' + region + '.amazonaws.com');
-  url = getValue('url', base + '/' + path + '/' + file);
-  latestFile = getFile('latest-file', 'latest');
-  latestPath = getPath('latest-path', 'latest');
-  latestUrl = getValue('latest-url', base + '/' + latestPath + '/' + latestFile);
+  var pkgName = getValue('name', packageJSON.name);
+  var pkgVersion = getValue('version', packageJSON.version);
+  var folder = getValue('folder');
+  var bucket = getValue('bucket', PKG);
+  var region = getValue('region', 'us-west-2');
+  var file = getFile('file', pkgVersion);
+  var path = getPath('path', pkgVersion);
+  var base = getValue('base', 'http://' + bucket + '.s3-website-' + region + '.amazonaws.com');
+  var url = getValue('url', base + '/' + path + '/' + file);
+  var latestFile = getFile('latest-file', 'latest');
+  var latestPath = getPath('latest-path', 'latest');
+  var latestUrl = getValue('latest-url', base + '/' + latestPath + '/' + latestFile);
 
   return {
-    name: packageJSON.name,
-    version: packageJSON.version,
+    name: pkgName,
+    version: pkgVersion,
     folder: folder,
     bucket: bucket,
     region: region,
@@ -46,6 +57,7 @@ module.exports = function(packageJSON) {
     url: url,
     latestFile: latestFile,
     latestPath: latestPath,
-    latestUrl: latestUrl
+    latestUrl: latestUrl,
+    modified: modified
   }
 };
