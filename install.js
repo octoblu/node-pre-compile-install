@@ -28,7 +28,7 @@ try {
   }
 
   var BASE_PATH = packageJSON['pre-compile-base-path'] ||
-    'http://octoblu-npm.s3-website-us-west-2.amazonaws.com';
+    'http://node-pre-compile.s3-website-us-west-2.amazonaws.com'
 
   var getUrl = function(packageJSON){
     var filename = [packageJSON.name, packageJSON.version, os.platform(), os.arch(), 'node-modules'].join('-') + '.tar.gz';
